@@ -90,5 +90,5 @@ app.post('/api/caronas', (req, res) => {
 // O comando app.listen "sobe" o servidor e o faz "escutar" por requisições na porta definida.
 app.listen(PORT, () => {
     console.log(`Servidor "CaronaFácil" rodando na porta ${PORT}`);
-    console.log('API disponível em http://localhost:3000/api/caronas');
+    console.log('API disponível em https://carona-facil.onrender.com');
 });
