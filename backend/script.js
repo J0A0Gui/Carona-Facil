@@ -1,22 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- ENDEREÇO DO BACK-END ---
-    // Mude para a URL do Render quando fizer o deploy do back-end
-    const API_URL = 'https://carona-facil.onrender.com';
-
     // --- ELEMENTOS DO DOM ---
-    const authContainer = document.getElementById('auth-container');
+    // A única parte de autenticação que sobra é o container principal, que não usamos mais
     const appContainer = document.getElementById('app-container');
-    
-    // Views de Autenticação
-    const loginView = document.getElementById('login-view');
-    const registerView = document.getElementById('register-view');
-    const loginForm = document.getElementById('login-form');
-    const registerForm = document.getElementById('register-form');
-    
-    // Links de troca
-    const showRegisterLink = document.getElementById('show-register');
-    const showLoginLink = document.getElementById('show-login');
 
     // Views Principais
     const homeView = document.getElementById('home-view');
@@ -30,131 +16,53 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchLink = document.getElementById('search-link');
     const myRidesLink = document.getElementById('my-rides-link');
     const homeOfferBtn = document.getElementById('home-offer-btn');
-    
+
     // Forms e Listas
     const offerForm = document.getElementById('offer-form');
     const searchForm = document.getElementById('search-form');
     const resultsList = document.getElementById('results-list');
     const myRidesList = document.getElementById('my-rides-list');
-    
-    // --- BANCO DE DADOS SIMULADO (CLIENT-SIDE) ---
-    // Apenas para a lista de viagens aceitas pelo usuário atual
+
+    // --- BANCO DE DADOS LOCAL (CLIENT-SIDE) ---
+    // Voltamos a usar os arrays locais para gerenciar os dados
+    let proximoId = 3;
+    let caronasDisponiveis = [
+        { id: 1, origem: 'araras', destino: 'sao paulo', data: '2025-07-20', vagas: 3, valor: 35.00, localEmbarque: 'Rodoviária de Araras' },
+        { id: 2, origem: 'leme', destino: 'campinas', data: '2025-07-22', vagas: 1, valor: 20.00, localEmbarque: 'Praça Central' }
+    ];
     let viagensAceitas = [];
 
-    // --- LÓGICA DE NAVEGAÇÃO E CONTROLE DE VIEW ---
-    const showMainView = (viewToShow) => {
+    // --- FUNÇÕES DE CONTROLE DE VISUALIZAÇÃO ---
+    const showView = (viewToShow) => {
         [homeView, offerView, searchView, myRidesView].forEach(view => view.classList.add('hidden'));
         viewToShow.classList.remove('hidden');
     };
+    
+    // Inicia na tela Home
+    showView(homeView);
 
-    // Alternar entre Login e Cadastro
-    showRegisterLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        loginView.classList.add('hidden');
-        registerView.classList.remove('hidden');
-    });
-
-    showLoginLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        registerView.classList.add('hidden');
-        loginView.classList.remove('hidden');
-    });
-
-    // Navegação Principal da Aplicação
-    logoLink.addEventListener('click', (e) => { e.preventDefault(); showMainView(homeView); });
-    offerLink.addEventListener('click', (e) => { e.preventDefault(); showMainView(offerView); });
+    // --- NAVEGAÇÃO PRINCIPAL DA APLICAÇÃO ---
+    logoLink.addEventListener('click', (e) => { e.preventDefault(); showView(homeView); });
+    offerLink.addEventListener('click', (e) => { e.preventDefault(); showView(offerView); });
     searchLink.addEventListener('click', (e) => {
         e.preventDefault();
-        showMainView(searchView);
-        buscarCaronas(); 
+        showView(searchView);
+        buscarCaronas();
     });
     myRidesLink.addEventListener('click', (e) => {
         e.preventDefault();
-        showMainView(myRidesView);
+        showView(myRidesView);
         renderizarMinhasViagens();
     });
-    homeOfferBtn.addEventListener('click', () => showMainView(offerView));
+    homeOfferBtn.addEventListener('click', () => showView(offerView));
 
-    // --- LÓGICA DE AUTENTICAÇÃO ---
+    // --- LÓGICA PRINCIPAL DA APLICAÇÃO (100% LOCAL) ---
 
-    // CADASTRO
-    registerForm.addEventListener('submit', async (e) => {
+    // OFERECER CARONA
+    offerForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        const email = document.getElementById('register-email').value;
-        const password = document.getElementById('register-password').value;
-
-        try {
-            const response = await fetch(`${API_URL}/api/register`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.message);
-            }
-
-            alert('Cadastro realizado com sucesso! Por favor, faça o login.');
-            showLoginLink.click(); // Simula clique para voltar para tela de login
-
-        } catch (error) {
-            alert(`Erro no cadastro: ${error.message}`);
-        }
-    });
-
-    // LOGIN
-    loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('login-email').value;
-        const password = document.getElementById('login-password').value;
-
-        try {
-            const response = await fetch(`${API_URL}/api/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.message);
-            }
-
-            // SALVAR O TOKEN: Esta é a chave da autenticação
-            localStorage.setItem('token', data.token);
-
-            // Transição para a aplicação principal
-            authContainer.classList.add('hidden');
-            appContainer.classList.remove('hidden');
-            showMainView(homeView);
-
-        } catch (error) {
-            alert(`Erro no login: ${error.message}`);
-        }
-    });
-    
-    // --- LÓGICA PRINCIPAL DA APLICAÇÃO ---
-
-    // BUSCAR CARONAS DO BACK-END
-    const buscarCaronas = async () => {
-        try {
-            const response = await fetch(`${API_URL}/api/caronas`);
-            if (!response.ok) throw new Error('Não foi possível buscar as caronas.');
-            const caronas = await response.json();
-            exibirResultados(caronas);
-        } catch (error) {
-            alert(error.message);
-        }
-    };
-    
-    // OFERECER CARONA (ENVIANDO TOKEN)
-    offerForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
         const novaCarona = {
+            id: proximoId++,
             origem: document.getElementById('origem-oferta').value.trim().toLowerCase(),
             destino: document.getElementById('destino-oferta').value.trim().toLowerCase(),
             data: document.getElementById('data-oferta').value,
@@ -162,38 +70,33 @@ document.addEventListener('DOMContentLoaded', () => {
             valor: parseFloat(document.getElementById('valor-oferta').value),
             localEmbarque: document.getElementById('local-embarque-oferta').value.trim()
         };
-        
-        const token = localStorage.getItem('token');
-        // No futuro, o back-end irá validar este token. Por enquanto, só enviamos.
-
-        try {
-            const response = await fetch(`${API_URL}/api/caronas`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    // 'Authorization': `Bearer ${token}` // Descomente quando o back-end exigir autenticação para esta rota
-                },
-                body: JSON.stringify(novaCarona)
-            });
-
-            if (!response.ok) throw new Error('Erro ao publicar carona.');
-
-            alert('Carona publicada com sucesso!');
-            offerForm.reset();
-            searchLink.click();
-
-        } catch (error) {
-            alert(error.message);
-        }
+        caronasDisponiveis.push(novaCarona);
+        alert('Carona publicada com sucesso!');
+        offerForm.reset();
+        searchLink.click();
     });
 
+    // BUSCAR CARONAS
+    const buscarCaronas = () => {
+        const origemBusca = document.getElementById('origem-busca').value.trim().toLowerCase();
+        const destinoBusca = document.getElementById('destino-busca').value.trim().toLowerCase();
+        const dataBusca = document.getElementById('data-busca').value;
+
+        const resultados = caronasDisponiveis.filter(carona => {
+            const matchOrigem = !origemBusca || carona.origem.includes(origemBusca);
+            const matchDestino = !destinoBusca || carona.destino.includes(destinoBusca);
+            const matchData = !dataBusca || carona.data === dataBusca;
+            return matchOrigem && matchDestino && matchData;
+        });
+        exibirResultados(resultados);
+    };
+    
     searchForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        // A busca com filtros no front-end por enquanto, mas o ideal seria o back-end fazer isso
-        buscarCaronas(); 
+        buscarCaronas();
     });
 
-    // LÓGICA PARA RENDERIZAR RESULTADOS (praticamente inalterada)
+    // RENDERIZAR RESULTADOS E VIAGENS ACEITAS
     const formatarCarona = (carona) => {
         const dataObj = new Date(carona.data + 'T00:00:00');
         const dataFormatada = dataObj.toLocaleDateString('pt-BR');
@@ -212,20 +115,19 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsList.innerHTML = '';
         if (caronas.length === 0) {
             resultsList.innerHTML = '<p class="empty-message">Nenhuma carona encontrada.</p>';
-            return;
+        } else {
+            caronas.forEach(carona => {
+                const caronaElement = document.createElement('div');
+                caronaElement.classList.add('ride-result');
+                caronaElement.innerHTML = `
+                    ${formatarCarona(carona)}
+                    <button class="btn btn-accept" data-ride-id="${carona.id}">Aceitar Viagem</button>
+                `;
+                resultsList.appendChild(caronaElement);
+            });
         }
-        caronas.forEach(carona => {
-            const caronaElement = document.createElement('div');
-            caronaElement.classList.add('ride-result');
-            // Nota: a lógica de aceitar viagem ainda é local, para simplificar.
-            caronaElement.innerHTML = `
-                ${formatarCarona(carona)}
-                <button class="btn btn-accept" data-ride-id="${carona.id}">Aceitar Viagem</button>
-            `;
-            resultsList.appendChild(caronaElement);
-        });
     };
-    
+
     const renderizarMinhasViagens = () => {
         myRidesList.innerHTML = '';
         if (viagensAceitas.length === 0) {
@@ -239,14 +141,20 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     };
-    
-    // LÓGICA DE ACEITAR VIAGEM (Ainda local para simplificar)
+
+    // ACEITAR VIAGEM
     resultsList.addEventListener('click', (e) => {
         if (e.target.classList.contains('btn-accept')) {
-            // Esta parte precisaria ser refatorada para interagir com o back-end no futuro,
-            // mas por enquanto, mantém a funcionalidade do protótipo.
-            alert('Funcionalidade de aceitar viagem ainda em desenvolvimento no back-end!');
+            const rideId = parseInt(e.target.getAttribute('data-ride-id'));
+            const rideIndex = caronasDisponiveis.findIndex(carona => carona.id === rideId);
+            
+            if (rideIndex > -1) {
+                const [acceptedRide] = caronasDisponiveis.splice(rideIndex, 1);
+                viagensAceitas.push(acceptedRide);
+                
+                alert('Viagem aceita com sucesso! Consulte a seção "Suas Viagens".');
+                buscarCaronas(); // Re-renderiza a lista de disponíveis, agora sem a carona aceita
+            }
         }
     });
-
 });
