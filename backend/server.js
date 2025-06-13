@@ -1,19 +1,17 @@
 // --- CaronaFácil Back-end ---
-// VERSÃO CORRIGIDA - ORDEM DE INICIALIZAÇÃO AJUSTADA
+// VERSÃO FINAL REVISADA E CORRIGIDA
 
 // --- 1. IMPORTAÇÃO DE DEPENDÊNCIAS ---
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+const jwt =require('jsonwebtoken');
 
 // --- 2. INICIALIZAÇÃO DO APLICATIVO EXPRESS ---
-// A VARIÁVEL 'app' É CRIADA AQUI. TUDO QUE USA 'app' DEVE VIR DEPOIS DESTA LINHA.
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000; // Render usa a variável de ambiente PORT
 
 // --- 3. CONFIGURAÇÃO DE MIDDLEWARES ---
-// Agora que 'app' existe, podemos usá-lo.
 app.use(cors());
 app.use(express.json());
 
@@ -27,7 +25,11 @@ let usuarios = [];
 let proximoIdUsuario = 1;
 
 // --- 5. DEFINIÇÃO DAS ROTAS DA API ---
-// Todas as rotas usam a variável 'app' e devem vir depois de sua criação.
+
+// ROTA DE VERIFICAÇÃO (NOVA): Para testar se o servidor está no ar
+app.get('/', (req, res) => {
+    res.send('API do CaronaFácil está no ar e funcionando!');
+});
 
 // ROTA PÚBLICA PARA BUSCAR CARONAS
 app.get('/api/caronas', (req, res) => {
@@ -37,6 +39,7 @@ app.get('/api/caronas', (req, res) => {
 
 // ROTA PARA OFERECER CARONA
 app.post('/api/caronas', (req, res) => {
+    console.log('Recebida requisição POST para /api/caronas');
     const novaCarona = req.body;
     novaCarona.id = proximoIdCarona++;
     caronasDisponiveis.push(novaCarona);
@@ -45,8 +48,12 @@ app.post('/api/caronas', (req, res) => {
 
 // ROTA PARA CADASTRAR USUÁRIO
 app.post('/api/register', async (req, res) => {
+    console.log('Recebida requisição POST para /api/register');
     try {
         const { email, password } = req.body;
+        if (!email || !password) {
+            return res.status(400).json({ message: 'E-mail e senha são obrigatórios.' });
+        }
         if (usuarios.find(user => user.email === email)) {
             return res.status(400).json({ message: 'Este e-mail já está em uso.' });
         }
@@ -56,12 +63,14 @@ app.post('/api/register', async (req, res) => {
         console.log('Usuários cadastrados:', usuarios);
         res.status(201).json({ message: 'Usuário cadastrado com sucesso!' });
     } catch (error) {
+        console.error("Erro no cadastro:", error);
         res.status(500).json({ message: 'Erro no servidor ao tentar cadastrar usuário.' });
     }
 });
 
 // ROTA PARA FAZER LOGIN
 app.post('/api/login', async (req, res) => {
+    console.log('Recebida requisição POST para /api/login');
     try {
         const { email, password } = req.body;
         const usuario = usuarios.find(user => user.email === email);
@@ -74,11 +83,12 @@ app.post('/api/login', async (req, res) => {
         }
         const token = jwt.sign(
             { id: usuario.id, email: usuario.email },
-            'sua_chave_secreta_super_segura',
+            'sua_chave_secreta_super_segura', // Em produção, use uma variável de ambiente
             { expiresIn: '1h' }
         );
         res.json({ message: 'Login bem-sucedido!', token: token });
     } catch (error) {
+        console.error("Erro no login:", error);
         res.status(500).json({ message: 'Erro no servidor ao tentar fazer login.' });
     }
 });
@@ -86,5 +96,4 @@ app.post('/api/login', async (req, res) => {
 // --- 6. INICIALIZAÇÃO DO SERVIDOR ---
 app.listen(PORT, () => {
     console.log(`Servidor "CaronaFácil" rodando na porta ${PORT}`);
-    console.log('API disponível em http://localhost:3000/api/caronas');
 });
