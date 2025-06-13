@@ -1,7 +1,7 @@
 :root {
-    --primary-color: #2c3e50;
-    --secondary-color: #3498db;
-    --success-color: #27ae60;
+    --primary-color: #2c3e50; /* Azul escuro */
+    --secondary-color: #3498db; /* Azul claro */
+    --success-color: #27ae60; /* Verde */
     --background-color: #f4f6f9;
     --card-background: #ffffff;
     --text-color: #333;
@@ -183,20 +183,55 @@ input[type="date"]:focus, input[type="date"]:valid { color: var(--text-color); }
     font-style: italic;
 }
 
-/* Adicionar no final do style.css */
-.auth-toggle {
-    text-align: center;
-    margin-top: 1.5rem;
-    font-size: 0.9rem;
-    color: var(--light-text-color);
+/* --- CÓDIGO NOVO: MEDIA QUERIES PARA RESPONSIVIDADE --- */
+
+/* Estilos para telas com largura máxima de 768px (tablets e celulares) */
+@media (max-width: 768px) {
+
+    .nav-container {
+        flex-direction: column; /* Empilha o logo e os links */
+        gap: 1rem; /* Adiciona um espaço entre o logo e a navegação */
+    }
+
+    .container {
+        margin-top: 1rem;
+        padding: 0 1rem; /* Reduz o espaçamento lateral */
+    }
+
+    .card {
+        padding: 1.5rem; /* Reduz o espaçamento interno dos cards */
+    }
+
+    .card h1 {
+        font-size: 2rem; /* Reduz o tamanho do título principal */
+    }
+
+    .card h2 {
+        font-size: 1.6rem; /* Reduz o tamanho dos subtítulos */
+    }
+
+    .card p {
+        margin-bottom: 1.5rem;
+    }
 }
 
-.auth-toggle a {
-    color: var(--secondary-color);
-    font-weight: 500;
-    text-decoration: none;
-}
+/* Estilos para telas com largura máxima de 480px (celulares menores) */
+@media (max-width: 480px) {
+    .card h1 {
+        font-size: 1.8rem;
+    }
 
-.auth-toggle a:hover {
-    text-decoration: underline;
+    .card h2 {
+        font-size: 1.4rem;
+    }
+
+    nav {
+        display: flex;
+        flex-wrap: wrap; /* Permite que os links quebrem a linha se não couberem */
+        justify-content: center;
+    }
+
+    nav a {
+        margin: 0.25rem 0.5rem;
+    }
 }
