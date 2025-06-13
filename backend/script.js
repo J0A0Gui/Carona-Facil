@@ -1,67 +1,160 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    const loginContainer = document.getElementById('login-container');
-    const appContainer = document.getElementById('app-container');
-    const loginForm = document.getElementById('login-form');
+    // --- ENDEREÇO DO BACK-END ---
+    // Mude para a URL do Render quando fizer o deploy do back-end
+    const API_URL = 'https://carona-facil.onrender.com';
 
+    // --- ELEMENTOS DO DOM ---
+    const authContainer = document.getElementById('auth-container');
+    const appContainer = document.getElementById('app-container');
+    
+    // Views de Autenticação
+    const loginView = document.getElementById('login-view');
+    const registerView = document.getElementById('register-view');
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    
+    // Links de troca
+    const showRegisterLink = document.getElementById('show-register');
+    const showLoginLink = document.getElementById('show-login');
+
+    // Views Principais
     const homeView = document.getElementById('home-view');
     const offerView = document.getElementById('offer-view');
     const searchView = document.getElementById('search-view');
     const myRidesView = document.getElementById('my-rides-view');
 
+    // Links de Navegação Principal
     const logoLink = document.getElementById('logo-link');
     const offerLink = document.getElementById('offer-link');
     const searchLink = document.getElementById('search-link');
     const myRidesLink = document.getElementById('my-rides-link');
     const homeOfferBtn = document.getElementById('home-offer-btn');
     
+    // Forms e Listas
     const offerForm = document.getElementById('offer-form');
     const searchForm = document.getElementById('search-form');
-    
     const resultsList = document.getElementById('results-list');
     const myRidesList = document.getElementById('my-rides-list');
-
-    //BANCO DE DADOS SIMULADO
-    let proximoId = 0;
-    let caronasDisponiveis = [
-        
-    ];
+    
+    // --- BANCO DE DADOS SIMULADO (CLIENT-SIDE) ---
+    // Apenas para a lista de viagens aceitas pelo usuário atual
     let viagensAceitas = [];
 
-    //CONTROLE DE VISUALIZAÇÃO
-    const showView = (viewToShow) => {
+    // --- LÓGICA DE NAVEGAÇÃO E CONTROLE DE VIEW ---
+    const showMainView = (viewToShow) => {
         [homeView, offerView, searchView, myRidesView].forEach(view => view.classList.add('hidden'));
         viewToShow.classList.remove('hidden');
     };
 
-    //LOGIN
-    loginForm.addEventListener('submit', (e) => {
+    // Alternar entre Login e Cadastro
+    showRegisterLink.addEventListener('click', (e) => {
         e.preventDefault();
-        loginContainer.classList.add('hidden');
-        appContainer.classList.remove('hidden');
-        showView(homeView);
+        loginView.classList.add('hidden');
+        registerView.classList.remove('hidden');
     });
 
-    //NAVEGAÇÃO
-    logoLink.addEventListener('click', (e) => { e.preventDefault(); showView(homeView); });
-    offerLink.addEventListener('click', (e) => { e.preventDefault(); showView(offerView); });
+    showLoginLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        registerView.classList.add('hidden');
+        loginView.classList.remove('hidden');
+    });
+
+    // Navegação Principal da Aplicação
+    logoLink.addEventListener('click', (e) => { e.preventDefault(); showMainView(homeView); });
+    offerLink.addEventListener('click', (e) => { e.preventDefault(); showMainView(offerView); });
     searchLink.addEventListener('click', (e) => {
         e.preventDefault();
-        showView(searchView);
-        buscarCaronas();
+        showMainView(searchView);
+        buscarCaronas(); 
     });
     myRidesLink.addEventListener('click', (e) => {
         e.preventDefault();
-        showView(myRidesView);
+        showMainView(myRidesView);
         renderizarMinhasViagens();
     });
-    homeOfferBtn.addEventListener('click', () => showView(offerView));
-    
-    //OFERECER CARONA
-    offerForm.addEventListener('submit', (e) => {
+    homeOfferBtn.addEventListener('click', () => showMainView(offerView));
+
+    // --- LÓGICA DE AUTENTICAÇÃO ---
+
+    // CADASTRO
+    registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+        const email = document.getElementById('register-email').value;
+        const password = document.getElementById('register-password').value;
+
+        try {
+            const response = await fetch(`${API_URL}/api/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message);
+            }
+
+            alert('Cadastro realizado com sucesso! Por favor, faça o login.');
+            showLoginLink.click(); // Simula clique para voltar para tela de login
+
+        } catch (error) {
+            alert(`Erro no cadastro: ${error.message}`);
+        }
+    });
+
+    // LOGIN
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+
+        try {
+            const response = await fetch(`${API_URL}/api/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message);
+            }
+
+            // SALVAR O TOKEN: Esta é a chave da autenticação
+            localStorage.setItem('token', data.token);
+
+            // Transição para a aplicação principal
+            authContainer.classList.add('hidden');
+            appContainer.classList.remove('hidden');
+            showMainView(homeView);
+
+        } catch (error) {
+            alert(`Erro no login: ${error.message}`);
+        }
+    });
+    
+    // --- LÓGICA PRINCIPAL DA APLICAÇÃO ---
+
+    // BUSCAR CARONAS DO BACK-END
+    const buscarCaronas = async () => {
+        try {
+            const response = await fetch(`${API_URL}/api/caronas`);
+            if (!response.ok) throw new Error('Não foi possível buscar as caronas.');
+            const caronas = await response.json();
+            exibirResultados(caronas);
+        } catch (error) {
+            alert(error.message);
+        }
+    };
+    
+    // OFERECER CARONA (ENVIANDO TOKEN)
+    offerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
         const novaCarona = {
-            id: proximoId++,
             origem: document.getElementById('origem-oferta').value.trim().toLowerCase(),
             destino: document.getElementById('destino-oferta').value.trim().toLowerCase(),
             data: document.getElementById('data-oferta').value,
@@ -69,37 +162,38 @@ document.addEventListener('DOMContentLoaded', () => {
             valor: parseFloat(document.getElementById('valor-oferta').value),
             localEmbarque: document.getElementById('local-embarque-oferta').value.trim()
         };
+        
+        const token = localStorage.getItem('token');
+        // No futuro, o back-end irá validar este token. Por enquanto, só enviamos.
 
-        if (novaCarona.origem && novaCarona.destino && novaCarona.data && novaCarona.vagas > 0 && !isNaN(novaCarona.valor) && novaCarona.localEmbarque) {
-            caronasDisponiveis.push(novaCarona);
+        try {
+            const response = await fetch(`${API_URL}/api/caronas`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // 'Authorization': `Bearer ${token}` // Descomente quando o back-end exigir autenticação para esta rota
+                },
+                body: JSON.stringify(novaCarona)
+            });
+
+            if (!response.ok) throw new Error('Erro ao publicar carona.');
+
             alert('Carona publicada com sucesso!');
             offerForm.reset();
             searchLink.click();
-        } else {
-            alert('Por favor, preencha todos os campos corretamente.');
+
+        } catch (error) {
+            alert(error.message);
         }
     });
 
-    //BUSCA E EXIBIÇÃO
     searchForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        buscarCaronas();
+        // A busca com filtros no front-end por enquanto, mas o ideal seria o back-end fazer isso
+        buscarCaronas(); 
     });
 
-    const buscarCaronas = () => {
-        const origemBusca = document.getElementById('origem-busca').value.trim().toLowerCase();
-        const destinoBusca = document.getElementById('destino-busca').value.trim().toLowerCase();
-        const dataBusca = document.getElementById('data-busca').value;
-
-        const resultados = caronasDisponiveis.filter(carona => {
-            const matchOrigem = !origemBusca || carona.origem.includes(origemBusca);
-            const matchDestino = !destinoBusca || carona.destino.includes(destinoBusca);
-            const matchData = !dataBusca || carona.data === dataBusca;
-            return matchOrigem && matchDestino && matchData;
-        });
-        exibirResultados(resultados);
-    };
-
+    // LÓGICA PARA RENDERIZAR RESULTADOS (praticamente inalterada)
     const formatarCarona = (carona) => {
         const dataObj = new Date(carona.data + 'T00:00:00');
         const dataFormatada = dataObj.toLocaleDateString('pt-BR');
@@ -114,15 +208,16 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     };
 
-    const exibirResultados = (resultados) => {
+    const exibirResultados = (caronas) => {
         resultsList.innerHTML = '';
-        if (resultados.length === 0) {
-            resultsList.innerHTML = '<p class="empty-message">Nenhuma carona encontrada com estes filtros.</p>';
+        if (caronas.length === 0) {
+            resultsList.innerHTML = '<p class="empty-message">Nenhuma carona encontrada.</p>';
             return;
         }
-        resultados.forEach(carona => {
+        caronas.forEach(carona => {
             const caronaElement = document.createElement('div');
             caronaElement.classList.add('ride-result');
+            // Nota: a lógica de aceitar viagem ainda é local, para simplificar.
             caronaElement.innerHTML = `
                 ${formatarCarona(carona)}
                 <button class="btn btn-accept" data-ride-id="${carona.id}">Aceitar Viagem</button>
@@ -135,31 +230,23 @@ document.addEventListener('DOMContentLoaded', () => {
         myRidesList.innerHTML = '';
         if (viagensAceitas.length === 0) {
             myRidesList.innerHTML = '<p class="empty-message">Você ainda não aceitou nenhuma viagem.</p>';
-            return;
+        } else {
+            viagensAceitas.forEach(carona => {
+                const caronaElement = document.createElement('div');
+                caronaElement.classList.add('ride-result', 'accepted-ride');
+                caronaElement.innerHTML = formatarCarona(carona);
+                myRidesList.appendChild(caronaElement);
+            });
         }
-        
-        viagensAceitas.forEach(carona => {
-            const caronaElement = document.createElement('div');
-            caronaElement.classList.add('ride-result', 'accepted-ride');
-            caronaElement.innerHTML = formatarCarona(carona);
-            myRidesList.appendChild(caronaElement);
-        });
     };
-
-    //ACEITAR VIAGEM
+    
+    // LÓGICA DE ACEITAR VIAGEM (Ainda local para simplificar)
     resultsList.addEventListener('click', (e) => {
-        if (e.target && e.target.classList.contains('btn-accept')) {
-            const rideId = parseInt(e.target.getAttribute('data-ride-id'));
-            const rideIndex = caronasDisponiveis.findIndex(carona => carona.id === rideId);
-            
-            if (rideIndex > -1) {
-                const [acceptedRide] = caronasDisponiveis.splice(rideIndex, 1);
-                viagensAceitas.push(acceptedRide);
-                
-                alert('Viagem aceita com sucesso! Consulte a seção "Suas Viagens" para ver os detalhes.');
-
-                buscarCaronas();
-            }
+        if (e.target.classList.contains('btn-accept')) {
+            // Esta parte precisaria ser refatorada para interagir com o back-end no futuro,
+            // mas por enquanto, mantém a funcionalidade do protótipo.
+            alert('Funcionalidade de aceitar viagem ainda em desenvolvimento no back-end!');
         }
     });
+
 });

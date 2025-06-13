@@ -11,17 +11,31 @@
 </head>
 <body>
 
-    <div id="login-container" class="container">
-        <div class="card">
+    <div id="auth-container" class="container">
+        <div id="login-view" class="card">
             <h1>Login</h1>
             <p>Acesse o sistema para continuar.</p>
             <form id="login-form">
-                <label for="username">Usuário</label>
-                <input type="text" id="username" placeholder="Digite seu usuário" required>
-                <label for="password">Senha</label>
-                <input type="password" id="password" placeholder="Digite sua senha" required>
+                <label for="login-email">Email</label>
+                <input type="email" id="login-email" placeholder="seu@email.com" required>
+                <label for="login-password">Senha</label>
+                <input type="password" id="login-password" placeholder="Digite sua senha" required>
                 <button type="submit" class="btn">Entrar</button>
             </form>
+            <p class="auth-toggle">Não tem uma conta? <a href="#" id="show-register">Cadastre-se</a></p>
+        </div>
+
+        <div id="register-view" class="card hidden">
+            <h1>Cadastro</h1>
+            <p>Crie sua conta para acessar a plataforma.</p>
+            <form id="register-form">
+                <label for="register-email">Email</label>
+                <input type="email" id="register-email" placeholder="seu@email.com" required>
+                <label for="register-password">Senha</label>
+                <input type="password" id="register-password" placeholder="Crie uma senha" required>
+                <button type="submit" class="btn">Cadastrar</button>
+            </form>
+            <p class="auth-toggle">Já tem uma conta? <a href="#" id="show-login">Faça o login</a></p>
         </div>
     </div>
 
@@ -39,56 +53,48 @@
 
         <div class="container">
             <div id="home-view" class="card">
-                <h1>Compartilhe e encontre caronas com facilidade</h1>
-                <p>Um sistema simples para conectar motoristas e passageiros na sua cidade.</p>
-                <button class="btn" id="home-offer-btn">Oferecer uma Carona</button>
+                 <h1>Compartilhe e encontre caronas com facilidade</h1>
+                 <p>Um sistema simples para conectar motoristas e passageiros na sua cidade.</p>
+                 <button class="btn" id="home-offer-btn">Oferecer uma Carona</button>
             </div>
-
             <div id="offer-view" class="card hidden">
-                <h2>Oferecer uma Carona</h2>
-                <p>Preencha os detalhes da sua carona para disponibilizar para passageiros.</p>
-                <form id="offer-form">
-                    <label for="origem-oferta">Origem</label>
-                    <input type="text" id="origem-oferta" placeholder="Onde vai sair?" required>
-                    <label for="destino-oferta">Destino</label>
-                    <input type="text" id="destino-oferta" placeholder="Para onde vai?" required>
-                    <label for="data-oferta">Data</label>
-                    <input type="date" id="data-oferta" required>
-                    <label for="vagas-oferta">Número de Vagas</label>
-                    <input type="number" id="vagas-oferta" value="1" min="1" max="10" required>
-                    <label for="valor-oferta">Valor da Viagem (R$)</label>
-                    <input type="number" id="valor-oferta" placeholder="Ex: 25,50" step="0.01" min="0" required>
-                    <label for="local-embarque-oferta">Local de Embarque</label>
-                    <input type="text" id="local-embarque-oferta" placeholder="Ex: Em frente à rodoviária" required>
-                    <button type="submit" class="btn">Publicar Carona</button>
-                </form>
+                 <h2>Oferecer uma Carona</h2>
+                 <form id="offer-form">
+                     <label for="origem-oferta">Origem</label>
+                     <input type="text" id="origem-oferta" required>
+                     <label for="destino-oferta">Destino</label>
+                     <input type="text" id="destino-oferta" required>
+                     <label for="data-oferta">Data</label>
+                     <input type="date" id="data-oferta" required>
+                     <label for="vagas-oferta">Número de Vagas</label>
+                     <input type="number" id="vagas-oferta" value="1" min="1" required>
+                     <label for="valor-oferta">Valor da Viagem (R$)</label>
+                     <input type="number" id="valor-oferta" step="0.01" min="0" required>
+                     <label for="local-embarque-oferta">Local de Embarque</label>
+                     <input type="text" id="local-embarque-oferta" required>
+                     <button type="submit" class="btn">Publicar Carona</button>
+                 </form>
             </div>
-
             <div id="search-view" class="card hidden">
-                <h2>Buscar uma Carona</h2>
-                <p>Busque caronas disponíveis filtrando pela origem, destino e data.</p>
-                <form id="search-form">
-                    <label for="origem-busca">Origem</label>
-                    <input type="text" id="origem-busca" placeholder="Cidade de origem">
-                    <label for="destino-busca">Destino</label>
-                    <input type="text" id="destino-busca" placeholder="Cidade de destino">
-                    <label for="data-busca">Data</label>
-                    <input type="date" id="data-busca">
-                    <button type="submit" class="btn">Buscar</button>
-                </form>
-
-                <div id="results-container">
-                    <h3>Caronas Disponíveis</h3>
-                    <div id="results-list">
-                        </div>
-                </div>
+                 <h2>Buscar uma Carona</h2>
+                 <form id="search-form">
+                     <label for="origem-busca">Origem</label>
+                     <input type="text" id="origem-busca">
+                     <label for="destino-busca">Destino</label>
+                     <input type="text" id="destino-busca">
+                     <label for="data-busca">Data</label>
+                     <input type="date" id="data-busca">
+                     <button type="submit" class="btn">Buscar</button>
+                 </form>
+                 <div id="results-container">
+                     <h3>Caronas Disponíveis</h3>
+                     <div id="results-list"></div>
+                 </div>
             </div>
-
             <div id="my-rides-view" class="card hidden">
-                <h2>Suas Viagens</h2>
-                <p>Aqui estão as caronas que você aceitou para participar.</p>
-                <div id="my-rides-list">
-                    </div>
+                 <h2>Suas Viagens</h2>
+                 <p>Aqui estão as caronas que você aceitou para participar.</p>
+                 <div id="my-rides-list"></div>
             </div>
         </div>
     </main>

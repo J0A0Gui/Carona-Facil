@@ -182,3 +182,21 @@ input[type="date"]:focus, input[type="date"]:valid { color: var(--text-color); }
     color: var(--light-text-color);
     font-style: italic;
 }
+
+/* Adicionar no final do style.css */
+.auth-toggle {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+    color: var(--light-text-color);
+}
+
+.auth-toggle a {
+    color: var(--secondary-color);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.auth-toggle a:hover {
+    text-decoration: underline;
+}
